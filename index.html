@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dek70 Planner - วางแผนเตรียมตัวสอบ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: 'Sarabun', sans-serif; 
+            background: linear-gradient(135deg, #b991bf 0%, #a476ab 100%); 
+            color: #333; 
+            min-height: 100vh; 
+            padding: 20px 20px 100px 20px; 
+            display: flex;
+            justify-content: center;
+        }
+        
+        /* แถบเมนูลอยด้านล่าง */
+        aside { 
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); 
+            background-color: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); border-radius: 40px; 
+            display: flex; align-items: center; padding: 8px 15px; z-index: 9999; border: 2px solid #f3e8f4;
+        }
+        nav { display: flex; gap: 12px; align-items: center; }
+        
+        .nav-btn { 
+            width: 45px; height: 45px; border-radius: 50%; display: flex; 
+            align-items: center; justify-content: center; font-size: 20px; 
+            color: #666; text-decoration: none; transition: all 0.25s ease; 
+            position: relative; background-color: #fcf8fd; border: none; cursor: pointer;
+        }
+        .nav-btn:hover { background-color: #f0e1f5; transform: translateY(-3px); }
+        .nav-btn.active { background: linear-gradient(135deg, #b991bf, #9d6fa3); color: white; box-shadow: 0 4px 12px rgba(185, 145, 191, 0.5); }
+
+        .nav-btn::after {
+            content: attr(data-title); position: absolute; bottom: 55px; left: 50%; 
+            transform: translateX(-50%); background-color: #4a3e4e; color: white; padding: 4px 10px; 
+            border-radius: 8px; font-size: 11px; font-weight: 600; white-space: nowrap; 
+            opacity: 0; pointer-events: none; transition: opacity 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+        .nav-btn:hover::after { opacity: 1; }
+
+        main { width: 100%; max-width: 950px; }
+        .page-section { display: none; }
+        .page-section.active { display: block; }
+
+        .page-title-container { text-align: center; margin-bottom: 25px; }
+        .page-title { 
+            display: inline-block;
+            font-size: 52px; font-weight: 800; color: #f2e479; 
+            text-shadow: 2px 4px 8px rgba(0,0,0,0.25); letter-spacing: 2px;
+            background: rgba(0,0,0,0.05); padding: 5px 30px; border-radius: 20px;
+        }
+        
+        .card { 
+            background-color: #ffffff; border-radius: 20px; padding: 24px; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08); margin-bottom: 20px; 
+            border-left: 6px solid #b991bf;
+        }
+        .card.chula { border-left-color: #d53f8c; }
+        .card h3 { font-size: 18px; font-weight: 700; color: #4a3e4e; margin-bottom: 16px; }
+        
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; }
+        .grid-cols-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+        
+        .countdown-box { 
+            background: linear-gradient(145deg, #ffffff, #fdf8fe); 
+            border: 1.5px solid #f0e1f5; border-radius: 16px; padding: 16px; text-align: center;
+        }
+        .countdown-box p:first-child { font-weight: 700; color: #6b4c72; font-size: 15px; }
+        .countdown-box p:nth-child(2) { font-size: 11px; color: #999; margin-bottom: 8px; }
+        .countdown-num { font-size: 21px; font-weight: 800; color: #8e5296; background: #f5e8f7; padding: 6px 10px; border-radius: 10px; display: inline-block; width: 100%; }
+        
+        .action-btn { 
+            display: block; width: 100%; padding: 10px; background-color: #f7f2f8; 
+            border: 1px solid #ebdcf0; border-radius: 12px; font-family: 'Sarabun', sans-serif; 
+            font-weight: 700; color: #8e5296; cursor: pointer; margin-top: 15px; 
+            text-align: center; text-decoration: none; transition: all 0.2s; font-size: 13px; 
+        }
+        .action-btn:hover { background-color: #b991bf; color: white; border-color: #b991bf; }
+
+        .event-item { 
+            display: flex; align-items: center; justify-content: space-between; 
+            padding: 14px 18px; background-color: #fdf8fe; border: 1.5px solid #f2e3f5; 
+            border-radius: 14px; margin-bottom: 12px; transition: all 0.2s;
+        }
+        .event-item:hover { border-color: #b991bf; background-color: #faf0fc; }
+        .event-item.completed { background-color: #f8f8f8; border-color: #eee; opacity: 0.55; text-decoration: line-through; }
+        .event-left { display: flex; align-items: center; gap: 14px; }
+        .event-left input[type="checkbox"] { width: 20px; height: 20px; accent-color: #8e5296; cursor: pointer; }
+        .del-btn { background: #ffeef0; border: none; color: #e53e3e; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; }
+        .del-btn:hover { background: #fed7d7; }
+        
+        .form-group { display: grid; grid-template-columns: 2fr 1.5fr 1fr; gap: 12px; margin-top: 15px; }
+        .form-group input { padding: 12px 16px; border: 1.5px solid #e2d2e5; border-radius: 12px; font-family: 'Sarabun', sans-serif; font-size: 14px; outline: none; }
+        .submit-btn { background: linear-gradient(135deg, #b991bf, #9d6fa3); color: white; border: none; border-radius: 12px; font-family: 'Sarabun', sans-serif; font-weight: 700; cursor: pointer; transition: opacity 0.2s; }
+        .submit-btn:hover { opacity: 0.9; }
+
+        .web-link { 
+            display: inline-flex; align-items: center; gap: 6px; background-color: #f0f4f8; 
+            padding: 8px 14px; border-radius: 10px; color: #2b6cb0; font-weight: 600; 
+            font-size: 13px; text-decoration: none; margin-bottom: 16px; word-break: break-all;
+        }
+        .score-title { font-size: 14px; font-weight: 700; color: #555; margin-bottom: 10px; }
+        .score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+        .score-card { 
+            background: linear-gradient(145deg, #fbfafd, #f3edf6); border: 1px solid #ebdcf0; 
+            border-radius: 14px; padding: 12px 16px; display: flex; flex-direction: column; gap: 4px;
+        }
+        .score-year { font-size: 12px; font-weight: 800; color: #8e5296; border-bottom: 1px dashed #d8beee; padding-bottom: 4px; margin-bottom: 4px; }
+        .score-row { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; color: #4a3e4e; }
+        .score-row.high { color: #2e7d32; }
+        .score-row.low { color: #c62828; }
+
+        .drive-link { 
+            display: inline-flex; align-items: center; gap: 8px; background-color: #f7eef9; 
+            padding: 10px 16px; border-radius: 12px; color: #8e5296; font-weight: 600; 
+            font-size: 13.5px; text-decoration: none; word-break: break-all; margin-top: 6px;
+        }
+        .drive-link:hover { background-color: #8e5296; color: white; }
+        .link-group { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+
+        @media(max-width: 600px) {
+            .form-group { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- แถบเมนูลอยด้านล่าง -->
+    <aside>
+        <nav>
+            <button onclick="switchPage('home')" id="nav-home" class="nav-btn active" data-title="หน้าแรก">🏠</button>
+            <button onclick="switchPage('calendar')" id="nav-calendar" class="nav-btn" data-title="ปฏิทินและกิจกรรม">📅</button>
+            <button onclick="switchPage('info')" id="nav-info" class="nav-btn" data-title="ข้อมูลคณะและคะแนน">💊</button>
+            <button onclick="switchPage('files')" id="nav-files" class="nav-btn" data-title="หนังสือและไฟล์เรียน">📚</button>
+        </nav>
+    </aside>
+
+    <main>
+        <!-- ================= PAGE 1: หน้าแรก ================= -->
+        <div id="page-home" class="page-section active">
+            <div class="page-title-container"><h2 class="page-title">Dek70</h2></div>
+
+            <div class="card">
+                <h3>⏳ นับถอยหลังวันสอบ</h3>
+                <div class="grid-3">
+                    <div class="countdown-box"><p>TGAT</p><p>30 ม.ค. 2570</p><p id="countdown-tgat" class="countdown-num">-</p></div>
+                    <div class="countdown-box"><p>TPAT 1</p><p>13 ก.พ. 2570</p><p id="countdown-tpat1" class="countdown-num">-</p></div>
+                    <div class="countdown-box"><p>A-LEVEL</p><p>13 มี.ค. 2570</p><p id="countdown-alevel" class="countdown-num">-</p></div>
+                </div>
+            </div>
+
+            <div class="grid-cols-3">
+                <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                    <div><h3>📌 กิจกรรมใกล้ถึง</h3><div id="nearest-event-box" style="font-size: 13.5px; color: #555; padding: 6px 0;">กำลังโหลด...</div></div>
+                    <button onclick="switchPage('calendar')" class="action-btn">ดูกิจกรรมทั้งหมด &rarr;</button>
+                </div>
+                <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                    <div><h3>💊 มหาลัยและคณะ</h3><p style="font-size: 13px; color: #666; line-height: 1.5;">รวบรวมเว็บไซต์ คะแนนสูงสุด ต่ำสุด และข้อมูลคณะเภสัชฯ ที่สนใจ</p></div>
+                    <button onclick="switchPage('info')" class="action-btn">ดูข้อมูลคณะ &rarr;</button>
+                </div>
+                <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                    <div><h3>📚 หนังสือและไฟล์</h3><p style="font-size: 13px; color: #666; line-height: 1.5;">แหล่งรวมไดร์ฟเอกสาร สสวท., เคมี, เลข, อังกฤษ และข้อสอบเก่า</p></div>
+                    <button onclick="switchPage('files')" class="action-btn">เปิดคลังไฟล์ &rarr;</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PAGE 2: ปฏิทินและกิจกรรม ================= -->
+        <div id="page-calendar" class="page-section">
+            <div class="page-title-container"><h2 class="page-title">ปฏิทินกิจกรรม</h2></div>
+            <div class="card">
+                <h3>📌 ไทม์ไลน์กำหนดการเตรียมตัวสอบ</h3>
+                <div id="event-list"></div>
+                <div style="margin-top: 25px; border-top: 2px dashed #f0e1f5; padding-top: 20px;">
+                    <h4 style="font-size: 15px; font-weight: 700; color: #5a455e; margin-bottom: 12px;">➕ เพิ่มกิจกรรมหรือกำหนดการใหม่</h4>
+                    <form id="add-event-form" onsubmit="addNewEvent(event)" class="form-group">
+                        <input type="text" id="event-name" placeholder="ชื่อกิจกรรม (เช่น สอบกลางภาค)" required>
+                        <input type="date" id="event-date" required>
+                        <button type="submit" class="submit-btn">+ บันทึก</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PAGE 3: ข้อมูลคณะ ================= -->
+        <div id="page-info" class="page-section">
+            <div class="page-title-container"><h2 class="page-title">ข้อมูลสำหรับการเตรียมตัว</h2></div>
+            <div class="card">
+                <h3>คณะเภสัช มหิดล</h3>
+                <a href="https://pharmacy.mahidol.ac.th/admissions/main.php" target="_blank" class="web-link">🌐 เข้าสู่เว็บไซต์คณะมหิดล &rarr;</a>
+                <div class="score-title">📊 สถิติคะแนนย้อนหลัง (สูงสุด - ต่ำสุด)</div>
+                <div class="score-grid">
+                    <div class="score-card"><div class="score-year">ปีการศึกษา 2569</div><div class="score-row high"><span>สูงสุด:</span> <span>67.4182</span></div><div class="score-row low"><span>ต่ำสุด:</span> <span>62.1292</span></div></div>
+                    <div class="score-card"><div class="score-year">ปีการศึกษา 2568</div><div class="score-row high"><span>สูงสุด:</span> <span>74.7896</span></div><div class="score-row low"><span>ต่ำสุด:</span> <span>62.9430</span></div></div>
+                    <div class="score-card"><div class="score-year">ปีการศึกษา 2567</div><div class="score-row high"><span>สูงสุด:</span> <span>59.5768</span></div><div class="score-row low"><span>ต่ำสุด:</span> <span>53.9493</span></div></div>
+                </div>
+            </div>
+            <div class="card chula">
+                <h3>คณะเภสัช สาขาบริบาลฯ จุฬาฯ</h3>
+                <div class="score-title" style="margin-top: 5px;">📊 สถิติคะแนนย้อนหลัง (สูงสุด - ต่ำสุด)</div>
+                <div class="score-grid">
+                    <div class="score-card"><div class="score-year">ปีการศึกษา 2569</div><div class="score-row high"><span>สูงสุด:</span> <span>70.4203</span></div><div class="score-row low"><span>ต่ำสุด:</span> <span>63.3449</span></div></div>
+                    <div class="score-card"><div class="score-year">ปีการศึกษา 2568</div><div class="score-row high"><span>สูงสุด:</span> <span>72.7689</span></div><div class="score-row low"><span>ต่ำสุด:</span> <span>64.1074</span></div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PAGE 4: หนังสือและไฟล์ ================= -->
+        <div id="page-files" class="page-section">
+            <div class="page-title-container"><h2 class="page-title">หนังสือและไฟล์สำหรับเรียน</h2></div>
+            <div class="card">
+                <h3>หนังสือสสวท</h3>
+                <p style="font-size: 13.5px; color: #666;">ลิงก์สำหรับเข้าไดร์ฟ เพื่อดูเอกสาร:</p>
+                <a href="https://drive.google.com/drive/folders/1-OR9ez_DJLH5jfZBEu-ykjD4FQZmzTUI" target="_blank" class="drive-link">📂 เปิด Google Drive สสวท. &rarr;</a>
+            </div>
+            <div class="card">
+                <h3>วิชาเคมี</h3>
+                <p style="font-size: 13.5px; color: #666;">ลิงก์สำหรับเข้าไดร์ฟ เพื่อดูเอกสาร:</p>
+                <a href="https://drive.google.com/drive/folders/1QzXDibg7uxSDIv7rOic3PV6EGX7xvDEm" target="_blank" class="drive-link">📂 1000 ข้อ แยกบท &rarr;</a>
+            </div>
+            <div class="card">
+                <h3>วิชาคณิต</h3>
+                <a href="https://drive.google.com/drive/folders/1YxToFY8NMqX8J0l-U8_TNpx1_yJs9YOt" target="_blank" class="drive-link">📂 1000 ข้อ แยกบท &rarr;</a>
+            </div>
+            <div class="card">
+                <h3>ภาษาอังกฤษ</h3>
+                <div class="link-group">
+                    <div><a href="https://drive.google.com/file/d/1e1P9FE-Kmj3fVyEQuMJvTTDGfGlgM5XR/view?usp=drivesdk" target="_blank" class="drive-link">🔗 เอกสาร Phrasal verbs</a></div>
+                    <div><a href="https://drive.google.com/file/d/18VxSUsfbub_IBYgPFuFX_2T84DR1bUM_/view?usp=drivesdk" target="_blank" class="drive-link">🔗 เอกสาร Idioms</a></div>
+                    <div><a href="https://drive.google.com/file/d/1BkplQtexRframca8ysaAMrAo1zRA1_f8/view?usp=drivesdk" target="_blank" class="drive-link">🔗 เอกสาร Synonyms</a></div>
+                </div>
+            </div>
+            <div class="card">
+                <h3>ข้อสอบเก่า</h3>
+                <div class="link-group">
+                    <div><a href="https://x.com/moonlitformj/status/1841040714958049441" target="_blank" class="drive-link">🐦 คลังข้อสอบเก่า (1) บน X</a></div>
+                    <div><a href="https://x.com/tutorjax/status/1521436133401698305" target="_blank" class="drive-link">🐦 คลังข้อสอบเก่า (2) บน X</a></div>
+                    <div><a href="https://drive.google.com/drive/folders/163FqvoXhLkqc8msBhKsqCNy2UPFOA-dW" target="_blank" class="drive-link">📂 ข้อสอบเก่าภาษาอังกฤษ</a></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // ระบบสลับหน้า
+        function switchPage(pageId) {
+            const pages = ['home', 'calendar', 'info', 'files'];
+            pages.forEach(p => {
+                document.getElementById(`page-${p}`).classList.remove('active');
+                document.getElementById(`nav-${p}`).classList.remove('active');
+            });
+            document.getElementById(`page-${pageId}`).classList.add('active');
+            document.getElementById(`nav-${pageId}`).classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ระบบนับถอยหลัง
+        function updateCountdowns() {
+            const now = new Date();
+            now.setHours(0, 0, 0, 0);
+
+            const tgatDate = new Date(2027, 0, 30);
+            const tpat1Date = new Date(2027, 1, 13);
+            const alevelDate = new Date(2027, 2, 13);
+
+            document.getElementById('countdown-tgat').innerText = getDaysRemaining(tgatDate, now);
+            document.getElementById('countdown-tpat1').innerText = getDaysRemaining(tpat1Date, now);
+            document.getElementById('countdown-alevel').innerText = getDaysRemaining(alevelDate, now);
+        }
+
+        function getDaysRemaining(targetDate, now) {
+            const diffTime = targetDate.getTime() - now.getTime();
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            if (diffDays > 0) return `อีก ${diffDays} วัน`;
+            if (diffDays === 0) return `สอบวันนี้! 🔥`;
+            return `สอบแล้ว`;
+        }
+
+        // จัดการกิจกรรมและบันทึกลงในเครื่องอย่างปลอดภัย
+        let defaultEvents = [
+            { name: "Mock TGAT", date: "2026-10-31", completed: false },
+            { name: "Mock TPAT 1", date: "2026-11-01", completed: false },
+            { name: "สมัคร TGAT", date: "2026-11-04", completed: false },
+            { name: "สอบ TGAT", date: "2027-01-30", completed: false },
+            { name: "สอบ TPAT 1", date: "2027-02-13", completed: false },
+            { name: "สอบ A-LEVEL", date: "2027-03-13", completed: false }
+        ];
+
+        let events = JSON.parse(localStorage.getItem('dek70_events')) || defaultEvents;
+
+        function renderEvents() {
+            events.sort((a, b) => new Date(a.date) - new Date(b.date));
+            localStorage.setItem('dek70_events', JSON.stringify(events));
+
+            const listEl = document.getElementById('event-list');
+            const nearestBox = document.getElementById('nearest-event-box');
+            if (!listEl) return;
+            
+            listEl.innerHTML = '';
+            let today = new Date();
+            today.setHours(0,0,0,0);
+            let nearestFound = false;
+            let nearestText = "ไม่มีกิจกรรมที่ใกล้จะถึง";
+
+            events.forEach((ev, index) => {
+                let parts = ev.date.split('-');
+                let evDate = new Date(parts[0], parts[1] - 1, parts[2]);
+
+                if (!nearestFound && evDate >= today && !ev.completed) {
+                    let options = { year: 'numeric', month: 'long', day: 'numeric' };
+                    let dateStr = evDate.toLocaleDateString('th-TH', options);
+                    nearestText = `<div style="background:#f9f2fb; padding:10px 12px; border-radius:12px; border:1px solid #ebdcf0;"><strong style="color:#6b4c72;">${ev.name}</strong><br><span style="color:#8e5296; font-size:12px;">📅 ${dateStr}</span></div>`;
+                    nearestFound = true;
+                }
+
+                let options = { year: 'numeric', month: 'short', day: 'numeric' };
+                let formattedDate = evDate.toLocaleDateString('th-TH', options);
+
+                let itemHTML = `
+                    <div class="event-item ${ev.completed ? 'completed' : ''}">
+                        <div class="event-left">
+                            <input type="checkbox" ${ev.completed ? 'checked' : ''} onclick="toggleEvent(${index})">
+                            <div>
+                                <p style="fon
