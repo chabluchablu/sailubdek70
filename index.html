@@ -239,5 +239,150 @@
                 <h3>ข้อสอบเก่า</h3>
                 <div class="link-group">
                     <div><a href="https://x.com/moonlitformj/status/1841040714958049441" target="_blank" class="drive-link">🐦 คลังข้อสอบเก่า (1) บน X</a></div>
-                    <div><a href="https://x.com/tutorjax/status/1521436133401698305" target="_blank" class="drive-link">🐦 คลังข้อสอบเก่า (2)
-                                                                                                                                                                             
+                    <div><a href="https://x.com/tutorjax/status/1521436133401698305" target="_blank" class="drive-link">🐦 คลังข้อสอบเก่า (2) บน X</a></div>
+                    <div><a href="https://drive.google.com/drive/folders/163FqvoXhLkqc8msBhKsqCNy2UPFOA-dW" target="_blank" class="drive-link">📂 ข้อสอบเก่าภาษาอังกฤษ</a></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // ฟังก์ชันสลับหน้าเว็บ
+        function switchPage(pageId) {
+            const pages = ['home', 'calendar', 'info', 'files'];
+            pages.forEach(p => {
+                const section = document.getElementById(`page-${p}`);
+                const navBtn = document.getElementById(`nav-${p}`);
+                if (section) section.classList.remove('active');
+                if (navBtn) navBtn.classList.remove('active');
+            });
+            
+            const targetPage = document.getElementById(`page-${pageId}`);
+            const targetNav = document.getElementById(`nav-${pageId}`);
+            if (targetPage) targetPage.classList.add('active');
+            if (targetNav) targetNav.classList.add('active');
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ระบบนับถอยหลังวันสอบ
+        function updateCountdowns() {
+            const now = new Date();
+            now.setHours(0, 0, 0, 0);
+
+            const tgatDate = new Date(2027, 0, 30);
+            const tpat1Date = new Date(2027, 1, 13);
+            const alevelDate = new Date(2027, 2, 13);
+
+            const tgatEl = document.getElementById('countdown-tgat');
+            const tpat1El = document.getElementById('countdown-tpat1');
+            const alevelEl = document.getElementById('countdown-alevel');
+
+            if (tgatEl) tgatEl.innerText = getDaysRemaining(tgatDate, now);
+            if (tpat1El) tpat1El.innerText = getDaysRemaining(tpat1Date, now);
+            if (alevelEl) alevelEl.innerText = getDaysRemaining(alevelDate, now);
+        }
+
+        function getDaysRemaining(targetDate, now) {
+            const diffTime = targetDate.getTime() - now.getTime();
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            if (diffDays > 0) return `อีก ${diffDays} วัน`;
+            if (diffDays === 0) return `สอบวันนี้! 🔥`;
+            return `สอบแล้ว`;
+        }
+
+         // ระบบจัดการกิจกรรมและเช็กลิสต์
+        let defaultEvents = [
+            { name: "Mock TGAT", date: "2026-10-31", completed: false },
+            { name: "Mock TPAT 1", date: "2026-11-01", completed: false },
+            { name: "สมัคร TGAT", date: "2026-11-04", completed: false },
+            { name: "สอบ TGAT", date: "2027-01-30", completed: false },
+            { name: "สอบ TPAT 1", date: "2027-02-13", completed: false },
+            { name: "สอบ A-LEVEL", date: "2027-03-13", completed: false }
+        ];
+
+        let events = JSON.parse(localStorage.getItem('dek70_events')) || defaultEvents;
+
+        function renderEvents() {
+            events.sort((a, b) => new Date(a.date) - new Date(b.date));
+            localStorage.setItem('dek70_events', JSON.stringify(events));
+
+            const listEl = document.getElementById('event-list');
+            const nearestBox = document.getElementById('nearest-event-box');
+            
+            if (listEl) {
+                listEl.innerHTML = '';
+                events.forEach((ev, index) => {
+                    let parts = ev.date.split('-');
+                    let evDate = new Date(parts[0], parts[1] - 1, parts[2]);
+                    let options = { year: 'numeric', month: 'short', day: 'numeric' };
+                    let formattedDate = evDate.toLocaleDateString('th-TH', options);
+
+                    let itemHTML = `
+                        <div class="event-item ${ev.completed ? 'completed' : ''}">
+                            <div class="event-left">
+                                <input type="checkbox" ${ev.completed ? 'checked' : ''} onclick="toggleEvent(${index})">
+                                <div>
+                                    <p style="font-weight:700; font-size:14.5px; color:#4a3e4e;">${ev.name}</p>
+                                    <p style="font-size:11.5px; color:#888;">📅 ${formattedDate}</p>
+                                </div>
+                            </div>
+                            <button onclick="deleteEvent(${index})" class="del-btn">ลบ</button>
+                        </div>
+                    `;
+                    listEl.innerHTML += itemHTML;
+                });
+            }
+
+            if (nearestBox) {
+                let today = new Date();
+                today.setHours(0,0,0,0);
+                let nearestFound = false;
+                let nearestText = "ไม่มีกิจกรรมที่ใกล้จะถึง";
+
+                for (let ev of events) {
+                    let parts = ev.date.split('-');
+                    let evDate = new Date(parts[0], parts[1] - 1, parts[2]);
+                    if (evDate >= today && !ev.completed) {
+                        let options = { year: 'numeric', month: 'long', day: 'numeric' };
+                        let dateStr = evDate.toLocaleDateString('th-TH', options);
+                        nearestText = `<div style="background:#f9f2fb; padding:10px 12px; border-radius:12px; border:1px solid #ebdcf0;"><strong style="color:#6b4c72;">${ev.name}</strong><br><span style="color:#8e5296; font-size:12px;">📅 ${dateStr}</span></div>`;
+                        nearestFound = true;
+                        break;
+                    }
+                }
+                nearestBox.innerHTML = nearestText;
+            }
+        }
+
+        function addNewEvent(e) {
+            e.preventDefault();
+            const name = document.getElementById('event-name').value;
+            const date = document.getElementById('event-date').value;
+
+            if (name && date) {
+                events.push({ name, date, completed: false });
+                document.getElementById('event-name').value = '';
+                document.getElementById('event-date').value = '';
+                renderEvents();
+            }
+        }
+
+        function toggleEvent(index) {
+            events[index].completed = !events[index].completed;
+            renderEvents();
+        }
+
+        function deleteEvent(index) {
+            events.splice(index, 1);
+            renderEvents();
+        }
+
+        // รันฟังก์ชันเริ่มต้นทันทีเมื่อโหลดหน้าเสร็จ
+        window.onload = function() {
+            updateCountdowns();
+            renderEvents();
+        };
+    </script>
+</body>
+</html>
